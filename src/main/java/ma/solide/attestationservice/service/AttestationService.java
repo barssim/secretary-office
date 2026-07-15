@@ -1,18 +1,31 @@
 package ma.solide.attestationservice.service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import ma.solide.attestationservice.dto.AttestationRequestDTO;
 import ma.solide.attestationservice.dto.AttestationResponse;
 import ma.solide.attestationservice.model.Attestation;
 import ma.solide.attestationservice.repository.AttestationRepository;
 
 @Service
 public class AttestationService {
+
+    // Maps type code → French display title
+    private static final Map<String, String> TYPE_TITLES = Map.of(
+        "enrollment",    "Attestation de scolarité",
+        "attendance",    "Attestation de présence",
+        "conduct",       "Attestation de bonne conduite",
+        "academic",      "Attestation de résultats académiques",
+        "registration",  "Attestation d'inscription"
+    );
 
     private final AttestationRepository attestationRepository;
 
@@ -68,5 +81,44 @@ public class AttestationService {
 
     private String resolveDocumentUrl(Integer id, String action) {
         return "/api/attestations/" + id + "/" + action;
+    }
+
+    public AttestationResponse requestAttestation(AttestationRequestDTO dto) {
+        if (dto.getUserId() == null || !StringUtils.hasText(dto.getType())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId et type sont requis");
+        }
+
+        String type = dto.getType().toLowerCase().trim();
+        if (!TYPE_TITLES.containsKey(type)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Type invalide. Valeurs acceptées : " + TYPE_TITLES.keySet());
+        }
+
+        // Prevent duplicate pending requests for same type
+        if (attestationRepository.existsByUserIdAndTypeAndStatus(dto.getUserId(), type, "pending")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Une demande de type '" + type + "' est déjà en attente pour cet utilisateur");
+        }
+
+        LocalDate today = LocalDate.now();
+        String reference = "REQ-" + today.format(DateTimeFormatter.BASIC_ISO_DATE)
+                + "-" + dto.getUserId() + "-" + type.substring(0, 3).toUpperCase();
+
+        Attestation attestation = Attestation.builder()
+                .userId(dto.getUserId())
+                .studentName(StringUtils.hasText(dto.getStudentName()) ? dto.getStudentName() : "Étudiant " + dto.getUserId())
+                .className(StringUtils.hasText(dto.getClassName()) ? dto.getClassName() : "-")
+                .title(TYPE_TITLES.get(type))
+                .type(type)
+                .date(today)
+                .status("pending")
+                .issuedBy("En attente de validation")
+                .validFrom(today)
+                .validUntil(today.plusYears(1))
+                .reference(reference)
+                .build();
+
+        Attestation saved = attestationRepository.save(attestation);
+        return toResponse(saved);
     }
 }

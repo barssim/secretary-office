@@ -15,5 +15,7 @@ public interface AttestationRepository extends JpaRepository<Attestation, Intege
     List<Attestation> findByUserIdOrderByDateDesc(Integer userId);
 
     List<Attestation> findByUserIdAndTitleContainingIgnoreCaseOrderByDateDesc(Integer userId, String search);
+
+    boolean existsByUserIdAndTypeAndStatus(Integer userId, String type, String status);
 }
 

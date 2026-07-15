@@ -7,12 +7,17 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import ma.solide.attestationservice.dto.AttestationRequestDTO;
 import ma.solide.attestationservice.dto.AttestationResponse;
 import ma.solide.attestationservice.model.Attestation;
 import ma.solide.attestationservice.service.AttestationPdfService;
@@ -50,6 +55,12 @@ public class AttestationController {
     @GetMapping("/{id}/download")
     public ResponseEntity<InputStreamResource> downloadAttestation(@PathVariable Integer id) {
         return buildPdfResponse(id, false);
+    }
+
+    @PostMapping("/request")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AttestationResponse requestAttestation(@RequestBody AttestationRequestDTO dto) {
+        return attestationService.requestAttestation(dto);
     }
 
     private ResponseEntity<InputStreamResource> buildPdfResponse(Integer id, boolean inline) {
