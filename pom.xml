@@ -12,10 +12,10 @@
     </parent>
 
     <groupId>ma.solide</groupId>
-    <artifactId>attestation_service</artifactId>
+    <artifactId>secretary-office</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>war</packaging>
-    <name>attestation_service</name>
+    <name>secretary-office</name>
     <description>Attestation management service for ECOLE</description>
 
     <properties>

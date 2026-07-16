@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-# attestation-service
-=======
-# Attestation Service
+# secretary-office
 
 Spring Boot microservice for ECOLE attestations.
 
@@ -20,4 +17,3 @@ mvn test
 mvn package
 ```
 
->>>>>>> 2c51fe8 (initial commit)
